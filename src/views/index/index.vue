@@ -16,15 +16,36 @@
                 </el-card>
             </el-col>
         </el-row>
-        <div class="cart">
-            <h5>我的购物车</h5>
-            <el-divider></el-divider>
-            <div v-for="(item, index) in order.orderDetails" :key="index">
-                <span>品名:{{item.name}}, 数量:{{item.count}}, 小计:{{item.sum / 100}}元</span>
+        <div class="bot-cont">
+            <div class="cart">
+                <h5>我的购物车</h5>
                 <el-divider></el-divider>
+                <div v-for="(item, index) in order.orderDetails" :key="index">
+                    <span>品名:{{item.name}}, 数量:{{item.count}}, 小计:{{item.sum / 100}}元</span>
+                    <el-divider></el-divider>
+                </div>
+                <el-button @click="onSubmit" type="primary">付款</el-button>
+                <el-button @click="onClear" type="primary">清空购物车</el-button>
             </div>
-            <el-button @click="onSubmit" type="primary">付款</el-button>
-            <el-button @click="onClear" type="primary">清空购物车</el-button>
+            <div class="shell-cont">
+                <el-form>
+                    <el-form-item label="设置并发量">
+                        <div style="margin-bottom: 20px; display: flex; justify-content: space-between;">
+                            <el-input type="number" v-model="concurrent" style="width: 50%;"></el-input>
+                            <el-button type="primary" @click="onTestClick">开始测试</el-button>
+                        </div>
+                        <span>服务器日志</span>
+                        <el-input type="textarea"
+                                  v-model="response"
+                                  rows="20"
+
+                                  v-loading="responseLoading"
+                                  element-loading-text="拼命加载中"
+                                  element-loading-spinner="el-icon-loading"
+                                  element-loading-background="rgba(0, 0, 0, 0.8)"></el-input>
+                    </el-form-item>
+                </el-form>
+            </div>
         </div>
         <el-dialog
                 title="提示"
@@ -76,7 +97,10 @@
 
                     ]
                 },
-                dialogVisible: false
+                dialogVisible: false,
+                concurrent: 1,
+                response: '',
+                responseLoading: false
             }
         },
 
@@ -106,6 +130,11 @@
                 }
             },
 
+            onTestClick() {
+                this.responseLoading = true
+                seckillService.siegeTest(this.concurrent)
+            },
+
             onSubmit() {
                 this.dialogVisible = true
             },
@@ -123,7 +152,48 @@
                             this.dialogVisible = false
                         }
                     })
+            },
+
+            //Websocket
+            initWebSocket() {
+                const url = 'ws://four-road-titans.xyz:8081/websocket/10';
+                this.websock = new WebSocket(url)
+                this.websock.onmessage = this.onWebSocketMessage;
+                this.websock.onopen = this.onWebSocketOpen;
+                this.websock.onclose = this.onWebSocketClose;
+                this.websock.onerror = this.onWebSocketErr;
+            },
+
+            onWebSocketMessage(e) {
+                console.log(e.data)
+                this.response = e.data;
+                this.responseLoading = false
+            },
+
+            onWebSocketOpen() {
+                let user = JSON.parse(localStorage.getItem('user'))
+                this.websock.send(user.username + '已上线!')
+                console.log('websocket has been connected!')
+            },
+
+            onWebSocketClose(e) {
+                console.log('websocket has been disconnected:', e)
+            },
+
+            onWebSocketErr() {
+                this.initWebSocket();
+            },
+
+            webSocketSend(data) {
+                this.websock.send(data)
             }
+
+        },
+        created() {
+            this.initWebSocket();
+        },
+        destroyed() {
+            this.onWebSocketClose();
         }
     }
 </script>
@@ -131,6 +201,19 @@
 <style scoped>
     .container {
         flex-direction: column;
+    }
+    .bot-cont {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        width: 100%;
+    }
+    .shell-cont {
+        width: 600px;
+    }
+    .bot-cont > div {
+        margin: 50px;
     }
     .cart {
         margin-top: 30px;
@@ -165,4 +248,5 @@
     .clearfix:after {
         clear: both
     }
+
 </style>

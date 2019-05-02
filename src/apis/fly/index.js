@@ -3,6 +3,7 @@ import { Loading } from "element-ui"
 import { Notification } from "element-ui";
 
 const host = 'http://four-road-titans.xyz:8081'
+//const host = 'http://127.0.0.1:8081';
 
 fly.config.baseURL = host
 fly.config.timeout = 5000

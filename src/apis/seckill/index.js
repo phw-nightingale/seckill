@@ -14,6 +14,12 @@ export default {
             Notification.error({title: '错误', message: '购物车为空'})
             return false
         }
+    },
+
+    async siegeTest(c) {
+        let res = await fly.get('/siege/' + c)
+        Notification.success(res.msg)
+        return true
     }
 
 }

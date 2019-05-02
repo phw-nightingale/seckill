@@ -8,6 +8,7 @@ export default {
         if (res.status === 0) {
             let user = res.data
             localStorage.setItem('session_key', user.token);
+            localStorage.setItem('user', JSON.stringify(user))
             Notification({title: '成功', message: res.msg, type: 'success'})
             return true
         } else {
